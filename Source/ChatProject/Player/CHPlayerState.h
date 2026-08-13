@@ -19,6 +19,8 @@ public:
 	
 	FString GetPlayerInfoString();
 	
+	FString GetPlayerNameString() const;
+	
 public:
 	UPROPERTY(Replicated)
 	FString PlayerNameString;
@@ -31,4 +33,7 @@ public:
 	
 	UPROPERTY(Replicated)
 	bool bCanGuess;
+	
+	UPROPERTY(Replicated)
+	bool bHasActedThisTurn = false;
 };

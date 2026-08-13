@@ -53,6 +53,12 @@ protected:
 	UPROPERTY()
 	TObjectPtr<UUserWidget> BackgroundImageInstance;
 	
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UUserWidget> TimeTextWidgetClass;
+	
+	UPROPERTY()
+	TObjectPtr<UUserWidget> TimeTextWidgetInstance;
+	
 public:
 	UPROPERTY(Replicated, BlueprintReadOnly)
 	FText NotificationText;

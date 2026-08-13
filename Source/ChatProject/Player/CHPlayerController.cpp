@@ -62,6 +62,15 @@ void ACHPlayerController::BeginPlay()
 			BackgroundImageInstance->AddToViewport(-100);
 		}
 	}
+	
+	if (IsValid(TimeTextWidgetClass) == true)
+	{
+		TimeTextWidgetInstance = CreateWidget<UUserWidget>(this, TimeTextWidgetClass);
+		if (IsValid(TimeTextWidgetInstance) == true)
+		{
+			TimeTextWidgetInstance->AddToViewport();
+		}
+	}
 }
 
 void ACHPlayerController::SetChatMessageString(const FString& InChatMessageString)

@@ -12,6 +12,8 @@ void ACHGameModeBase::BeginPlay()
 	
 	SecretNumberString = GenerateSecretNumber();
 	UE_LOG(LogTemp, Error, TEXT("%s"), *SecretNumberString);
+	
+	StartNewTurn();
 }
 
 void ACHGameModeBase::OnPostLogin(AController* NewPlayer)
@@ -137,8 +139,19 @@ void ACHGameModeBase::PrintChatMessageString(ACHPlayerController* InChattingPlay
 	FString ChatMessageString = InChatMessageString;
 	FString OnlyChatMessageString = GetStringAfterPlayerInfo(InChatMessageString);
 	ACHPlayerState* CHPS = InChattingPlayerController->GetPlayerState<ACHPlayerState>();
+	
 	if (IsValid(CHPS) == true)
 	{
+		ACHGameStateBase* CHGS = GetGameState<ACHGameStateBase>();
+		if (IsValid(CHGS) == true)
+		{
+			if (CHGS->CurrentTurnPlayerState != CHPS)
+			{
+				InChattingPlayerController->ClientRPCPrintChatMessageString(TEXT("It's not your turn."));
+				return;
+			}
+		}
+		
 		if (CHPS->bCanGuess)
 		{
 			switch (IsGuessNumberString(OnlyChatMessageString))
@@ -171,6 +184,7 @@ void ACHGameModeBase::PrintChatMessageString(ACHPlayerController* InChattingPlay
 							JudgeGame(InChattingPlayerController, StrikeCount);
 						}
 					}
+					SwitchToNextTurn();
 					break;
 				}
 				
@@ -299,4 +313,87 @@ FString ACHGameModeBase::GetStringAfterPlayerInfo(const FString& InString)
 		return Matcher.GetCaptureGroup(1);
 	}
 	return InString;
+}
+
+void ACHGameModeBase::StartGlobalTimer()
+{
+	ACHGameStateBase* CHGS = GetGameState<ACHGameStateBase>();
+	if (IsValid(CHGS) == false)
+	{
+		return;
+	}
+	CHGS->RemainingTime = GlobalDefaultTime;
+	
+	GetWorldTimerManager().ClearTimer(GameTimerHandle);
+	GetWorldTimerManager().SetTimer(GameTimerHandle, this, &ACHGameModeBase::OnGlobalTimerTick, 1.0f, true);
+}
+
+void ACHGameModeBase::OnGlobalTimerTick()
+{
+	ACHGameStateBase* CHGS = GetGameState<ACHGameStateBase>();
+	if (IsValid(CHGS) == false)
+	{
+		return;
+	}
+	
+	CHGS->RemainingTime--;
+	
+	if (CHGS->RemainingTime <= 0)
+	{
+		CHGS->RemainingTime = 0;
+		GetWorldTimerManager().ClearTimer(GameTimerHandle);
+		
+		SwitchToNextTurn();
+	}
+}
+
+bool ACHGameModeBase::IsTimeOver() const
+{
+	ACHGameStateBase* CHGS = GetGameState<ACHGameStateBase>();
+	if (IsValid(CHGS) == false)
+	{
+		return true;
+	}
+	return CHGS->RemainingTime <= 0;
+}
+
+void ACHGameModeBase::StartNewTurn()
+{
+	FString PlayerNameString = "Higashiyama Kobeni";
+	
+	if (AllPlayerControllers.IsValidIndex(CurrentTurnPlayerIndex))
+	{
+		ACHPlayerController* CurrentPC = AllPlayerControllers[CurrentTurnPlayerIndex];
+		if (IsValid(CurrentPC) == true)
+		{
+			ACHPlayerState* PS = CurrentPC->GetPlayerState<ACHPlayerState>();
+			if (IsValid(PS) == true)
+			{
+				PlayerNameString = PS->GetPlayerNameString();
+				
+				PS->bHasActedThisTurn = false;
+				
+				if (ACHGameStateBase* CHGS = GetGameState<ACHGameStateBase>())
+				{
+					CHGS->CurrentTurnPlayerState = PS;
+				}
+			}
+		}
+	}
+	
+	for (const auto& CHPlayerController : AllPlayerControllers)
+	{
+		CHPlayerController->ClientRPCPrintChatMessageString(FString::Printf(TEXT("%s's turn."), *PlayerNameString));
+	}
+	
+	StartGlobalTimer();
+}
+
+void ACHGameModeBase::SwitchToNextTurn()
+{
+	if (AllPlayerControllers.Num() == 0) return;
+	
+	CurrentTurnPlayerIndex = (CurrentTurnPlayerIndex + 1) % AllPlayerControllers.Num();
+	
+	StartNewTurn();
 }

@@ -19,10 +19,16 @@ void ACHPlayerState::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>&
 	DOREPLIFETIME(ThisClass, CurrentGuessCount);
 	DOREPLIFETIME(ThisClass, MaxGuessCount);
 	DOREPLIFETIME(ThisClass, bCanGuess);
+	DOREPLIFETIME(ThisClass, bHasActedThisTurn);
 }
 
 FString ACHPlayerState::GetPlayerInfoString()
 {
 	FString PlayerInfoString = PlayerNameString + TEXT(": ") + FString::FromInt(CurrentGuessCount) + TEXT("/") + FString::FromInt(MaxGuessCount);
 	return PlayerInfoString;
+}
+
+FString ACHPlayerState::GetPlayerNameString() const
+{
+	return PlayerNameString;
 }

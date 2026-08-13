@@ -44,8 +44,24 @@ public:
 	
 	FString GetStringAfterPlayerInfo(const FString& InString);
 	
+	void StartGlobalTimer();
+	
+	void OnGlobalTimerTick();
+	
+	bool IsTimeOver() const;
+	
+	void StartNewTurn();
+	
+	void SwitchToNextTurn();
+	
 protected:
 	FString SecretNumberString;
 	
 	TArray<TObjectPtr<ACHPlayerController>> AllPlayerControllers;
+	
+	FTimerHandle GameTimerHandle;
+	
+	const int32 GlobalDefaultTime = 10;
+	
+	int32 CurrentTurnPlayerIndex = 0;
 };

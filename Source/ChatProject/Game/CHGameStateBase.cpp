@@ -1,7 +1,9 @@
 ﻿#include "CHGameStateBase.h"
 
-#include "Kismet/GameplayStatics.h"
 #include "Player/CHPlayerController.h"
+
+#include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 
 void ACHGameStateBase::MulticastRPCBroadCastLoginMessage_Implementation(const FString& InNameString = FString(TEXT("HIGASHIYAMA KOBENI")))
 {
@@ -18,4 +20,12 @@ void ACHGameStateBase::MulticastRPCBroadCastLoginMessage_Implementation(const FS
 			}
 		}
 	}
+}
+
+void ACHGameStateBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	
+	DOREPLIFETIME(ACHGameStateBase, RemainingTime);
+	DOREPLIFETIME(ACHGameStateBase, CurrentTurnPlayerState);
 }
